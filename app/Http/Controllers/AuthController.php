@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -12,7 +13,6 @@ class AuthController extends Controller
     // Metode untuk mendaftarkan pengguna
     public function register(Request $request)
     {
-        // Validasi input
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -21,14 +21,13 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         if ($request->client_password !== env('CLIENT_PASSWORD')) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return $this->errorResponse('Unauthorized', 401);
         }
 
-        // Membuat pengguna baru
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -38,7 +37,7 @@ class AuthController extends Controller
         // Membuat token untuk pengguna baru
         $token = $user->createToken('MyApp')->plainTextToken;
 
-        return response()->json(['token' => $token], 201);
+        return $this->successResponse(['token' => $token], 'User registered successfully', 201);
     }
 
     // Metode untuk login pengguna
@@ -51,7 +50,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         // Mencari pengguna berdasarkan email
@@ -59,12 +58,12 @@ class AuthController extends Controller
 
         // Memverifikasi password
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return $this->errorResponse('Unauthorized', 401);
         }
 
         // Membuat token untuk pengguna yang berhasil login
         $token = $user->createToken('MyApp')->plainTextToken;
 
-        return response()->json(['token' => $token], 200);
+        return $this->successResponse(['token' => $token], 'User registered successfully', 200);
     }
 }
