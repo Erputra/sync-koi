@@ -2,23 +2,41 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Penjualan extends Model
 {
     use HasFactory;
 
-    protected $table = 'penjualan'; // Specify the table name if it differs from the model name
-    protected $primaryKey = 'id'; // Set your primary key if different
-    public $timestamps = true; // Set to false if you don't use created_at and updated_at
+    protected $table = 'penjualan';
+    protected $primaryKey = 'id'; 
+    public $timestamps = true; 
 
-    protected $fillable;
+    protected $fillable = [
+        'app_id',
+        'dpp',
+        'discount',
+        'harga_bruto',
+        'harga_netto',
+        'jumlah',
+        'kode_barang',
+        'kode_cabang',
+        'kode_customer',
+        'kode_gudang',
+        'kode_sales',
+        'kode_transaksi',
+        'konversi',
+        'nama_barang',
+        'nama_cabang',
+        'nama_customer',
+        'nama_gudang',
+        'nama_sales',
+        'ppn',
+        'satuan',
+        'server_id',
+        'tanggal',
+        'void',
+    ];
 
-    public function __construct(array $attributes = [])
-    {
-        parent::__construct($attributes);
-        $this->fillable = Schema::getColumnListing($this->table); // Automatically fetch all column names
-    }
 }

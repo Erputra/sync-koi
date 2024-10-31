@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Penjualan; 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -27,6 +28,9 @@ class ProcessSales implements ShouldQueue
     public function handle(): void
     {
         // Create a new sale record
-        Penjualan::create($this->saleData);
+        // Penjualan::create($this->salesData);
+        foreach ($this->salesData as $sales) {
+            Penjualan::create($sales);
+        }
     }
 }

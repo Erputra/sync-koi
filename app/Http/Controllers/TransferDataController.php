@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Jobs\ProcessSales; 
+
 
 class TransferDataController extends Controller
 {
     use ApiResponse;
 
-    public function store(Request $request)
+    public function receive_sales_data(Request $request)
     {
         // Validate the incoming request
         $request->validate([
@@ -39,10 +42,19 @@ class TransferDataController extends Controller
         ]);
     
         // Loop through each sale data and dispatch a job
-        foreach ($request->all() as $salesData) {
-            ProcessSales::dispatch($salesData);
+        $salesData = $request->all();
+        $lowerCaseSalesData = [];
+        
+        // Convert keys to lower case for each item in the sales data
+        foreach ($salesData as $item) {
+            $lowerCaseSalesData[] = array_change_key_case($item, CASE_LOWER);
         }
-
+        Log::debug($lowerCaseSalesData);
+        $chunkSize = 100; 
+        $chunks = array_chunk($lowerCaseSalesData, $chunkSize);
+        foreach ($chunks as $chunk) {
+            ProcessSales::dispatch($chunk);
+        }
         return $this->successResponse([
             'token' => '$token'], 'Sales records are being processed', 201);
     }
