@@ -7,6 +7,7 @@ use App\Http\Controllers\TransferDataController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('uploadsalesdata', [TransferDataController::class, 'receive_sales_data']);
+    Route::post('uploadaccountingdata', [TransferDataController::class, 'receive_accounting_data']);
 });
 
 Route::post('register', [AuthController::class, 'register']);

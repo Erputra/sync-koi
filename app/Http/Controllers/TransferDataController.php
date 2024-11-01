@@ -6,6 +6,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\ProcessSales; 
+use App\Jobs\ProcessAccounting; 
 
 
 class TransferDataController extends Controller
@@ -57,5 +58,49 @@ class TransferDataController extends Controller
         }
         return $this->successResponse([
             'token' => '$token'], 'Sales records are being processed', 201);
+    }
+
+    public function receive_accounting_data(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            '*.App_ID' => 'required|string|max:255',
+            '*.Server_ID' => 'required|string|max:255',
+            '*.No_Bukti' => 'required|string|max:255',
+            '*.Tanggal_Transaksi' => 'required|date',
+            '*.No_Faktur' => 'string|max:255|nullable',
+            '*.Jenis_Slip' => 'string|max:255|nullable',
+            '*.No_Urut' => 'string|max:255|nullable',
+            '*.Keterangan' => 'string|max:255|nullable',
+            '*.Remark' => 'string|max:255|nullable',
+            '*.No_Akun' => 'string|max:255|nullable',
+            '*.Jumlah_Debet' => 'numeric|nullable',
+            '*.Jumlah_Kredit' => 'numeric|nullable',
+            '*.Jumlah_Debet_MU' => 'numeric|nullable',
+            '*.Jumlah_Kredit_MU' => 'numeric|nullable',
+            '*.Code_MU' => 'string|max:255|nullable',
+            '*.Kurs' => 'numeric|nullable',
+            '*.Is_RugiLaba' => 'boolean',
+            '*.Header_1' => 'string|max:255|nullable',
+            '*.Header_2' => 'string|max:255|nullable',
+            '*.Header_3' => 'string|max:255|nullable',
+        ]);
+    
+        // Loop through each sale data and dispatch a job
+        $accountingData = $request->all();
+        $lowerCaseAccountingData = [];
+        
+        // Convert keys to lower case for each item in the sales data
+        foreach ($accountingData as $item) {
+            $lowerCaseAccountingData[] = array_change_key_case($item, CASE_LOWER);
+        }
+        Log::debug($lowerCaseAccountingData);
+        $chunkSize = 100; 
+        $chunks = array_chunk($lowerCaseAccountingData, $chunkSize);
+        foreach ($chunks as $chunk) {
+            ProcessAccounting::dispatch($chunk);
+        }
+        return $this->successResponse([
+            'token' => '$token'], 'Accounting records are being processed', 201);
     }
 }
