@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\AccumulatedTransactions; 
+use App\Models\RepaymentJournal; 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,17 +10,17 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class ProcessAccumulatedTransactions implements ShouldQueue
+class ProcessRepaymentJournal implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    protected $accumulatedTransactionsData;
-    
+    protected $repaymentJournalData;
+
     /**
      * Create a new job instance.
      */
-    public function __construct(array $accumulatedTransactionsData)
+    public function __construct(array $repaymentJournalData)
     {
-        $this->accumulatedTransactionsData = $accumulatedTransactionsData;
+        $this->repaymentJournalData = $repaymentJournalData;
     }
 
     /**
@@ -28,8 +28,8 @@ class ProcessAccumulatedTransactions implements ShouldQueue
      */
     public function handle(): void
     {
-        foreach ($this->accumulatedTransactionsData as $accumulated) {
-            AccumulatedTransactions::create($accumulated);
+        foreach ($this->repaymentJournalData as $repayment) {
+            RepaymentJournal::create($repayment);
         }
     }
 }

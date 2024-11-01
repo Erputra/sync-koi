@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\ProcessSales; 
 use App\Jobs\ProcessAccounting; 
+use App\Jobs\ProcessRepaymentJournal; 
+use App\Jobs\ProcessAccumulatedTransactions; 
 
 
 class TransferDataController extends Controller
@@ -138,5 +140,37 @@ class TransferDataController extends Controller
             'token' => '$token'], 'Accumulated Transactions records are being processed', 201);
     }
 
-    
+    public function receive_repayment_journal_data(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            '*.App_ID' => 'required|string|max:255',
+            '*.Server_ID' => 'required|string|max:255',
+            '*.Kode_Transaksi' => 'required|string|max:255',
+            '*.Tanggal_Pelunasan' => 'required|date|nullable',
+            '*.No_Bukti' => 'string|max:255|nullable',
+            '*.Jenis_Transaksi' => 'string|max:255|nullable',
+            '*.No_ACC_6' => 'string|max:255|nullable',
+            '*.Nama_ACC_6' => 'string|max:255|nullable',
+            '*.Value' => 'numeric|nullable',
+            '*.Code_MU' => 'string|max:255|nullable',
+            '*.Kurs' => 'numeric|nullable',
+        ]);
+
+        // Loop through each sale data and dispatch a job
+        $repaymentData = $request->all();
+        $lowerCaseRepaymentData = [];
+        
+        // Convert keys to lower case for each item in the sales data
+        foreach ($repaymentData as $item) {
+            $lowerCaseRepaymentData[] = array_change_key_case($item, CASE_LOWER);
+        }
+        $chunkSize = 100; 
+        $chunks = array_chunk($lowerCaseRepaymentData, $chunkSize);
+        foreach ($chunks as $chunk) {
+            ProcessRepaymentJournal::dispatch($chunk);
+        }
+        return $this->successResponse([
+            'token' => '$token'], 'Repayment Journal records are being processed', 201);
+    }
 }
