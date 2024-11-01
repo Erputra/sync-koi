@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\ProcessSales; 
 use App\Jobs\ProcessAccounting; 
+use App\Jobs\ProcessCoaBalance; 
 use App\Jobs\ProcessRepaymentJournal; 
 use App\Jobs\ProcessAccumulatedTransactions; 
 
@@ -172,5 +173,42 @@ class TransferDataController extends Controller
         }
         return $this->successResponse([
             'token' => '$token'], 'Repayment Journal records are being processed', 201);
+    }
+
+    public function receive_coa_balance_data(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            '*.App_ID' => 'required|string|max:255',
+            '*.Server_ID' => 'required|string|max:255',
+            '*.Tahun' => 'integer|nullable',
+            '*.Bulan' => 'integer|nullable',
+            '*.No_Akun' => 'string|max:255|nullable',
+            '*.Nama_Akun' => 'string|max:255|nullable',
+            '*.Saldo' => 'numeric|nullable',
+            '*.Saldo_MU' => 'numeric|nullable',
+            '*.Code_MU' => 'string|max:255|nullable',
+            '*.Kurs' => 'numeric|nullable',
+            '*.Is_RugiLaba' => 'boolean',
+            '*.Header_1' => 'string|max:255|nullable',
+            '*.Header_2' => 'string|max:255|nullable',
+            '*.Header_3' => 'string|max:255|nullable',
+        ]);
+
+        // Loop through each sale data and dispatch a job
+        $coaBalanceData = $request->all();
+        $lowerCaseCoaBalanceData = [];
+        
+        // Convert keys to lower case for each item in the sales data
+        foreach ($coaBalanceData as $item) {
+            $lowerCaseCoaBalanceData[] = array_change_key_case($item, CASE_LOWER);
+        }
+        $chunkSize = 100; 
+        $chunks = array_chunk($lowerCaseCoaBalanceData, $chunkSize);
+        foreach ($chunks as $chunk) {
+            ProcessCoaBalance::dispatch($chunk);
+        }
+        return $this->successResponse([
+            'token' => '$token'], 'COA Balance records are being processed', 201);
     }
 }

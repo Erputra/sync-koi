@@ -10,6 +10,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('uploadaccountingdata', [TransferDataController::class, 'receive_accounting_data']);
     Route::post('uploadaccumulatedtransactionsdata', [TransferDataController::class, 'receive_accumulated_transactions_data']);
     Route::post('uploadrepaymentdata', [TransferDataController::class, 'receive_repayment_journal_data']);
+    Route::post('uploadcoabalancedata', [TransferDataController::class, 'receive_coa_balance_data']);
 });
 
 Route::post('register', [AuthController::class, 'register']);
