@@ -103,4 +103,40 @@ class TransferDataController extends Controller
         return $this->successResponse([
             'token' => '$token'], 'Accounting records are being processed', 201);
     }
+
+    public function receive_accumulated_transactions_data(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            '*.App_ID' => 'required|string|max:255',
+            '*.Server_ID' => 'required|string|max:255',
+            '*.Kode_Transaksi' => 'required|string|max:255',
+            '*.Tanggal_Transaksi' => 'required|date|nullable',
+            '*.Jatuh_Tempo' => 'required|date|nullable',
+            '*.Jenis_Transaksi' => 'string|max:255|nullable',
+            '*.No_ACC_6' => 'string|max:255|nullable',
+            '*.Nama_ACC_6' => 'string|max:255|nullable',
+            '*.Value' => 'numeric|nullable',
+            '*.Code_MU' => 'string|max:255|nullable',
+            '*.Kurs' => 'numeric|nullable',
+        ]);
+    
+        // Loop through each sale data and dispatch a job
+        $accumulatedTransactionsData = $request->all();
+        $lowerCaseAccumulatedTransactionsData = [];
+        
+        // Convert keys to lower case for each item in the sales data
+        foreach ($accumulatedTransactionsData as $item) {
+            $lowerCaseAccumulatedTransactionsData[] = array_change_key_case($item, CASE_LOWER);
+        }
+        $chunkSize = 100; 
+        $chunks = array_chunk($lowerCaseAccumulatedTransactionsData, $chunkSize);
+        foreach ($chunks as $chunk) {
+            ProcessAccumulatedTransactions::dispatch($chunk);
+        }
+        return $this->successResponse([
+            'token' => '$token'], 'Accumulated Transactions records are being processed', 201);
+    }
+
+    
 }
